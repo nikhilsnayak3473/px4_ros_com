@@ -83,7 +83,9 @@ if __name__ == "__main__":
 
     # get PX4 Firmware tag
     px4_tag = check_output(
-        "cd " + px4_dir + " && git describe --abbrev=0 && cd " + os.getcwd(), shell=True)
+        f"cd {px4_dir} && git describe --abbrev=0 && cd {os.getcwd()}",
+        shell=True,
+    )
 
     print(
         "\n\033[34m-------------- PX4 XRCE-DDS COMMUNICATION TEST --------------\033[0m")
@@ -104,8 +106,11 @@ if __name__ == "__main__":
     # launch PX4 SITL daemon, in headless mode
     print(
         "\n\033[93m-- Starting the PX4 SITL daemon and Gazebo (without GUI)...\033[0m\n")
-    call("cd " + px4_dir + " && (NO_PXH=1 HEADLESS=1 make px4_sitl_default gazebo_" +
-         px4_target + " &) && cd " + os.getcwd(), shell=True, stderr=DEVNULL)
+    call(
+        f"cd {px4_dir} && (NO_PXH=1 HEADLESS=1 make px4_sitl_default gazebo_{px4_target} &) && cd {os.getcwd()}",
+        shell=True,
+        stderr=DEVNULL,
+    )
 
     # waits for PX4 daemon and Gazebo to load
     sleep(20)
@@ -115,38 +120,48 @@ if __name__ == "__main__":
 
     # launch the specified test
     topic = ""
-    test_format = list()
+    test_format = []
     test_result = -1
 
-    if(test_type == "fcu_output"):
-        # Flight controller output tests
-        if (listener == "sensor_combined"):
-            node = "sensor_combined_listener"
-            topic = "sensor_combined"
-            test_format = ["output", "from"]
-            test_result = call(
-                "python3 " + test_dir + "/test_output.py -t " + topic.replace("_", " ").title().replace(" ", ""), stderr=STDOUT, shell=True,
-                universal_newlines=True)
-
-    elif(test_type == "fcu_input"):
+    if test_type == "fcu_input":
         # Flight controller input tests
-        if (advertiser == "debug_vect"):
+        if advertiser == "debug_vect":
             package_name = "px4_ros_com"
             node = "debug_vect_advertiser"
             topic = "debug_vect"
             test_format = ["input", "on"]
             test_result = call(
-                "python3 " + test_dir + "/test_input.py -b " + px4_bin_dir + " -p " + package_name + " -n " + node + " -t " + topic, stderr=STDOUT, shell=True,
-                universal_newlines=True)
-        elif (advertiser == "onboard_computer_status"):
+                f"python3 {test_dir}/test_input.py -b {px4_bin_dir} -p {package_name} -n {node} -t {topic}",
+                stderr=STDOUT,
+                shell=True,
+                universal_newlines=True,
+            )
+        elif advertiser == "onboard_computer_status":
             # specific test for https://github.com/Auterion/system_monitor_ros
             package_name = "system_monitor_ros"
             node = "system_monitor_node"
             topic = "onboard_computer_status"
             test_format = ["input", "on"]
             test_result = call(
-                "python3 " + test_dir + "/test_input.py -b " + px4_bin_dir + " -p " + package_name + " -n " + node + " -t " + topic, stderr=STDOUT, shell=True,
-                universal_newlines=True)
+                f"python3 {test_dir}/test_input.py -b {px4_bin_dir} -p {package_name} -n {node} -t {topic}",
+                stderr=STDOUT,
+                shell=True,
+                universal_newlines=True,
+            )
+
+    elif test_type == "fcu_output":
+        # Flight controller output tests
+        if (listener == "sensor_combined"):
+            node = "sensor_combined_listener"
+            topic = "sensor_combined"
+            test_format = ["output", "from"]
+            test_result = call(
+                f"python3 {test_dir}/test_output.py -t "
+                + topic.replace("_", " ").title().replace(" ", ""),
+                stderr=STDOUT,
+                shell=True,
+                universal_newlines=True,
+            )
 
     call("killall gzserver micro-ros-agent px4 ros2",
          shell=True, stdout=DEVNULL, stderr=DEVNULL)

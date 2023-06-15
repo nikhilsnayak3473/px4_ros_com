@@ -63,15 +63,14 @@ if __name__ == "__main__":
     print("\n\033[93m-- " + args.topic_name +
           " uORB data test launched:\033[0m")
     # start the ROS 2 node
-    call("ros2 run " + args.package_name + " " + args.node_name + " &", shell=True)
+    call(f"ros2 run {args.package_name} {args.node_name} &", shell=True)
 
     sleep(3)
 
     # call the 'listener' command for the '<topic_name>' uORB topic
     output = check_output(test_cmd, shell=True, universal_newlines=True)
 
-    call("killall " + args.node_name,
-         shell=True, stdout=DEVNULL, stderr=DEVNULL)
+    call(f"killall {args.node_name}", shell=True, stdout=DEVNULL, stderr=DEVNULL)
 
     if output and "never published" not in output:
         print(
